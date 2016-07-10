@@ -2,17 +2,19 @@
 #include "app_window.h"
 
 #define NUMBER_OF_TIMERS 6 //number of timers used by app
-#define START_TIME 0 
-#define ELAPSED_TIME 1
-#define RESET_DISPLAY_TO_CURRENT_TIMER_AFTER_MS 10000
+#define START_TIME 0  // for code readability in timer array
+#define ELAPSED_TIME 1 // for code readability in timer array
+#define RESET_DISPLAY_TO_CURRENT_TIMER_AFTER_MS 10000 // timer display resets to the current running timer after this many ms
+
+// values for the persistent sotrage of timer  and display info
 
 #define PERSIST_DATA_VERSION_KEY 101
 #define PERSIST_DATA_CURRENT_VERSION 1
 #define PERSIST_DATA_TIMER_KEY 1
 #define PERSIST_DATA_SHOWING_KEY 2
 
-int timer [2][NUMBER_OF_TIMERS];
-int timer_showing;
+int timer [2][NUMBER_OF_TIMERS]; // the array to store the timers [0=START_TIME,1=ELAPSED TIME][TIMER NUMBER]
+int timer_showing; // the number of the timer currently showing on the screen
 
 AppTimer *display_reset_timer;
 
@@ -22,7 +24,7 @@ THINGS TO DO
 ------------
 
 - tidy up header file
-- document code
+
 
 */
 
@@ -178,7 +180,7 @@ static void next_timer(void) {
   //else move to the next timer
   timer[START_TIME][timer_running_now] = 0;
   timer[START_TIME][timer_running_now+1] = current_time;
-  if (get_timer_showing() != 0 ) set_timer_showing(timer_running_now+1);
+  if (get_timer_showing() != 0 ) set_timer_showing(timer_running_now+1); // show the current running timer, unless you are watching total time
  
 }
 
@@ -202,12 +204,12 @@ static void next_timer(void) {
    show_time(timer[ELAPSED_TIME][timer_showing]);
   
  // If we have any running timers, come back here
-  if (get_current_running_timer() > -1) {
+  if (get_current_running_timer() != -1) {
    app_timer_register(1000, increment_timers, NULL);
   }
 }
 
-static void pause_resume(void)  {
+static void pause_resume(void)  { //middle button action
   
   int i;
   int timer_running_now;
@@ -231,7 +233,7 @@ static void pause_resume(void)  {
   }
   
 }
- void set_timer_description(int timer_number) {
+ void set_timer_description(int timer_number) { // tells you about the current timer
    
   
   switch(timer_number) {
@@ -259,7 +261,7 @@ static void pause_resume(void)  {
     
 }
 
- void show_time(int time) {
+ void show_time(int time) { //displays a time in the two time windows
   
   static char top_text[6];
   static char bot_text[6];
@@ -291,7 +293,7 @@ void show_current_timer(void *data) {
   }
 }
 
- void show_next_timer(void) {
+ void show_next_timer(void) { //top button action
    
    app_timer_cancel(display_reset_timer);
    
@@ -300,13 +302,14 @@ void show_current_timer(void *data) {
   set_timer_description(timer_showing);
   show_time(timer[ELAPSED_TIME][timer_showing]);
    
-  if ((get_timer_showing() != get_current_running_timer()) && (get_timer_showing() !=0 )) {
+  if ((get_timer_showing() != get_current_running_timer()) && (get_timer_showing() !=0 )) { // this automatically resets to the current runnign timer after a while, unless you are watching total time
      display_reset_timer=app_timer_register(RESET_DISPLAY_TO_CURRENT_TIMER_AFTER_MS,show_current_timer, NULL);
   }
 }
 
  void update_bot_left_display(void *data) {
-   // callback function for the bottom left status display
+   // callback function for the bottom left status display 
+   // If you are not watching the current running timer, this puts a blinking indicator at the bottom of the screen
    
    int current_running_timer = get_current_running_timer();
    
@@ -400,7 +403,7 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 static void long_select_down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (get_current_running_timer() == -1) {
+  if (get_current_running_timer() == -1) { // only allow reset if no timers running
     text_layer_set_text(top_text_layer, " ");
     text_layer_set_text(top_time_layer, "RESET"); 
     text_layer_set_text(bot_time_layer, " ");
@@ -410,7 +413,7 @@ static void long_select_down_click_handler(ClickRecognizerRef recognizer, void *
 }
 
 static void long_select_up_click_handler(ClickRecognizerRef recognizer, void *context) {
-  if (get_current_running_timer() == -1) {
+  if (get_current_running_timer() == -1) { // only allow reset if no timers running
   reset_all_timers();
   timer_showing=(0);
   set_timer_description(timer_showing);
