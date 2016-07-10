@@ -1,0 +1,24 @@
+{
+    "author": "jonathan@lightcycles.co.uk",
+    "dependencies": {},
+    "keywords": [],
+    "name": "tri-timer",
+    "pebble": {
+        "capabilities": [
+            ""
+        ],
+        "displayName": "Tri timer",
+        "enableMultiJS": true,
+        "messageKeys": [],
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "uuid": "27ece8cb-3197-427c-bf3b-fe23ba6a903e",
+        "watchapp": {
+            "watchface": false
+        }
+    },
+    "version": "1.0.0"
+}
