@@ -135,14 +135,24 @@ static int get_current_running_timer(void)  {
    
  static int get_last_timer_run(void)  {
   
-  //returns the number of the last timer with any elapsed time recorded
   
   int i;
   int last_timer_run = -1;
+   
+  // first check for any timers marked as paused
   
-  for (i = 0; i < NUMBER_OF_TIMERS; i++) { 
-    if (timer[ELAPSED_TIME][i]>0) last_timer_run = i;
+   for (i = 0; i < NUMBER_OF_TIMERS; i++) { 
+    if (timer[START_TIME][i] == -1)  last_timer_run = i;
   }
+   
+  //if there wwas no timer marked, return the number of the last timer with any elapsed time recorded
+   
+  if (last_timer_run == -1) {
+    for (i = 0; i < NUMBER_OF_TIMERS; i++) { 
+      if (timer[ELAPSED_TIME][i]>0) last_timer_run = i;
+    }
+  }
+   
   return last_timer_run;
 } 
   
@@ -230,6 +240,7 @@ static void pause_resume(void)  { //middle button action
   }
   else {
     for (i = 0; i < NUMBER_OF_TIMERS; i++)  timer[START_TIME][i] = 0; // stop all the timers
+    timer[START_TIME][timer_running_now] = -1; // marke the terminated timer for restarting later
   }
   
 }
