@@ -134,7 +134,8 @@ static int get_current_running_timer(void)  {
  }
    
  static int get_last_timer_run(void)  {
-  
+
+   
   
   int i;
   int last_timer_run = -1;
@@ -152,6 +153,7 @@ static int get_current_running_timer(void)  {
       if (timer[ELAPSED_TIME][i]>0) last_timer_run = i;
     }
   }
+  // if there is no time on any timer, return -1 
    
   return last_timer_run;
 } 
@@ -167,6 +169,10 @@ static void next_timer(void) {
   current_time = time(NULL);
   
   timer_running_now = get_current_running_timer();
+  
+  // if no timer running check get the last one that was running
+  
+  if (timer_running_now == -1) timer_running_now=get_last_timer_run();
   
   vibes_double_pulse();
   
