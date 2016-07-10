@@ -12,7 +12,7 @@
 #define PERSIST_DATA_SHOWING_KEY 2
 
 int timer [2][NUMBER_OF_TIMERS];
-int timer_showing = 0;
+int timer_showing;
 
 AppTimer *display_reset_timer;
 
@@ -22,10 +22,6 @@ THINGS TO DO
 ------------
 
 - tidy up header file
-- add proper functions to handle changes to timer_showing
-- initialise text using proper display functions
-- write/read timer data to persistent storage
-- implement reset
 - document code
 
 */
@@ -175,13 +171,14 @@ static void next_timer(void) {
     for (i = 0; i < NUMBER_OF_TIMERS; i++) {
       timer[START_TIME][i] = 0;
     } 
+    set_timer_showing(0); // show the grand total at the end
    return;
   }
   
   //else move to the next timer
   timer[START_TIME][timer_running_now] = 0;
   timer[START_TIME][timer_running_now+1] = current_time;
-  if (get_timer_showing() != 0 )set_timer_showing(timer_running_now+1);
+  if (get_timer_showing() != 0 ) set_timer_showing(timer_running_now+1);
  
 }
 
@@ -231,7 +228,6 @@ static void pause_resume(void)  {
   }
   else {
     for (i = 0; i < NUMBER_OF_TIMERS; i++)  timer[START_TIME][i] = 0; // stop all the timers
-    set_timer_showing(0); //show the grand total
   }
   
 }
@@ -360,6 +356,7 @@ static void load_timers_from_storage(void) {
   }
   else {
     reset_all_timers();
+    set_timer_showing(1);
   }
   }
                                                                                 
@@ -407,6 +404,7 @@ static void long_select_down_click_handler(ClickRecognizerRef recognizer, void *
     text_layer_set_text(top_text_layer, " ");
     text_layer_set_text(top_time_layer, "RESET"); 
     text_layer_set_text(bot_time_layer, " ");
+    vibes_long_pulse();
 }
   
 }
