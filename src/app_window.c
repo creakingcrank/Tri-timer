@@ -133,10 +133,22 @@ static int get_current_running_timer(void)  {
   }
  }
    
+
+static bool is_paused(void) {
+
+// returns true if there is a paused flag in any timer
+
+int i;
+bool paused = false;
+  
+for (i = 0; i < NUMBER_OF_TIMERS; i++) if  (timer[START_TIME][i] == -1) paused = true;
+  
+return paused;
+   
+ }
+
  static int get_last_timer_run(void)  {
 
-   
-  
   int i;
   int last_timer_run = -1;
    
@@ -168,11 +180,10 @@ static void next_timer(void) {
   
   current_time = time(NULL);
   
+  //check for a paused flag, and clear it if it exists;
+  if (is_paused()) pause_resume();
+  
   timer_running_now = get_current_running_timer();
-  
-  // if no timer running check get the last one that was running
-  
-  if (timer_running_now == -1) timer_running_now=get_last_timer_run();
   
   vibes_double_pulse();
   
@@ -181,6 +192,7 @@ static void next_timer(void) {
     timer[START_TIME][0] = current_time; 
     timer[START_TIME][1] = current_time;
     set_timer_showing(1);
+    increment_timers(NULL);
     return;
   }
   
@@ -225,7 +237,7 @@ static void next_timer(void) {
   }
 }
 
-static void pause_resume(void)  { //middle button action
+ void pause_resume(void)  { //middle button action
   
   int i;
   int timer_running_now;
