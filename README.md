@@ -8,5 +8,5 @@ A stopwatch that times and stores the five phases of a triathlon (swim - transit
 * Use the SET button to pause or restart the timer (only really needed in the event of a problem)
 * When no timer is running, hold down the SET button for 3 seconds to reset all the timers
 
-## Miss-keyed?
+
 * If the timer is advanced accidentally, you can repeatedly press the DOWN button to roll through the timers  to the correct phase
