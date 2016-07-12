@@ -10,5 +10,3 @@ A stopwatch that times and stores the five phases of a triathlon (swim - transit
 * Timers are held in persistent storage, so you can leave the app, even with timers running, and return later if you need to.
 * If you accidentally advance the timer to the wrong phase, you can repeatedly press the DOWN button to roll through the timers to the correct phase
 
-## Things to do
-* ?Sanity check on timers so resets SWIM/BIKE/RUN if less than 1 minute on advance to next to timer
