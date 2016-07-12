@@ -24,6 +24,7 @@ THINGS TO DO
 ------------
 
 - tidy up header file
+- Get rid of thos global variables
 
 
 */
