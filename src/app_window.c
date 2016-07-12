@@ -72,7 +72,7 @@ static void initialise_ui(void) {
   layer_add_child(window_get_root_layer(s_window), (Layer *)bot_time_layer);
   
   // bot_button_layer
-  bot_button_layer = text_layer_create(GRect(70, 118, 71, 41));
+  bot_button_layer = text_layer_create(GRect(70, 116, 71, 41));
   text_layer_set_background_color(bot_button_layer, GColorClear);
   text_layer_set_text(bot_button_layer, ">");
   text_layer_set_text_alignment(bot_button_layer, GTextAlignmentRight);
@@ -131,6 +131,7 @@ static int get_current_running_timer(void)  {
     timer[START_TIME] [i] = 0;
     timer[ELAPSED_TIME][i] = 0;
   }
+  set_timer_showing(0);
  }
    
 
@@ -147,6 +148,7 @@ return paused;
    
  }
 
+/* CURRENTLY NOY USED
  static int get_last_timer_run(void)  {
 
   int i;
@@ -169,7 +171,24 @@ return paused;
    
   return last_timer_run;
 } 
+ */
+
+/*  EXPERIMENTAL AND NOT WORKING
+void timer_sanity_check(int timer_running_now) {
   
+  // If you running quickly through the timers to correct a problem, reset this timer to 0 and push elapsed time onto the next timer, rolling around the end
+  
+  if ( timer[ELAPSED_TIME][timer_running_now] < 10) {
+    if (timer_running_now < NUMBER_OF_TIMERS-1) { //push this time onto the next timer
+      timer[ELAPSED_TIME][timer_running_now+1] = timer[ELAPSED_TIME][timer_running_now+1]+timer[ELAPSED_TIME][timer_running_now];
+    }
+    else timer[ELAPSED_TIME][1]=timer[ELAPSED_TIME][1]+timer[ELAPSED_TIME][timer_running_now];
+  
+   timer[ELAPSED_TIME][timer_running_now] =0;
+  }
+}
+*/
+
 static void next_timer(void) {
   
   // Moves on to the next timer
@@ -185,7 +204,12 @@ static void next_timer(void) {
   
   timer_running_now = get_current_running_timer();
   
-  vibes_double_pulse();
+  //timer_sanity_check(timer_running_now); 
+ 
+ 
+    if (timer_running_now == NUMBER_OF_TIMERS-1) vibes_long_pulse(); // Long pulse to finish, double pulse for mid race change
+    else vibes_double_pulse();
+  
   
   //if no timer running - start the total timer (0) and the 1st timer (1)
   if (timer_running_now == -1) {
@@ -212,6 +236,7 @@ static void next_timer(void) {
  
 }
 
+
  void increment_timers(void *data) {
    
    // This is the main timer callback loop 
@@ -237,37 +262,44 @@ static void next_timer(void) {
   }
 }
 
+
  void pause_resume(void)  { //middle button action
+  
   
   int i;
   int timer_running_now;
-  int last_timer_run;
   time_t current_time;
   
   current_time = time(NULL);
   
-  vibes_double_pulse();
   
   timer_running_now = get_current_running_timer();
-  
-  if (timer_running_now == -1) { //no timers running so restart the last running timer
-    last_timer_run = get_last_timer_run();
-    if (last_timer_run > -1) timer[START_TIME][last_timer_run] = current_time;
-    else next_timer();   
-    increment_timers(NULL);
-  }
-  else {
+   
+   
+   if (is_paused()) { //if no timer running, check for any paused and restart
+     vibes_double_pulse();
+     for  (i = 0; i < NUMBER_OF_TIMERS; i++) { //if any timers marked as paused, restart them
+       if (timer[START_TIME][i] == -1) {
+         timer[START_TIME][i] = current_time;
+       }
+     }
+     increment_timers(NULL);
+   }
+  else if ( timer_running_now != -1 ) {
     for (i = 0; i < NUMBER_OF_TIMERS; i++)  timer[START_TIME][i] = 0; // stop all the timers
-    timer[START_TIME][timer_running_now] = -1; // marke the terminated timer for restarting later
+    timer[START_TIME][timer_running_now] = -1; // mark the terminated timer for restarting later
+    timer[START_TIME][0] = -1;    // and mark the elapsed time timer the same way
+    vibes_short_pulse();
   }
-  
+
 }
  void set_timer_description(int timer_number) { // tells you about the current timer
    
   
   switch(timer_number) {
     case 0 :
-    text_layer_set_text(top_text_layer, "TOTAL");
+    if (timer[ELAPSED_TIME][0]==0)text_layer_set_text(top_text_layer, "READY");
+    else text_layer_set_text(top_text_layer, "TOTAL");
     break;
     case 1 :
     text_layer_set_text(top_text_layer, "SWIM");
@@ -342,7 +374,8 @@ void show_current_timer(void *data) {
    
    int current_running_timer = get_current_running_timer();
    
-   
+   if (is_paused()) text_layer_set_text(bot_left_layer, "II");
+   else {
    if (timer_showing != current_running_timer) {
      switch (current_running_timer)  {
     case -1 :
@@ -366,10 +399,11 @@ void show_current_timer(void *data) {
      }
   }
   else text_layer_set_text(bot_left_layer, " ");
+   }
  
 // flash the text every second
    if (time(NULL) % 2) text_layer_set_text(bot_left_layer, " ");
- 
+  
 
 app_timer_register(1000, update_bot_left_display, NULL);
   
