@@ -15,6 +15,7 @@
 
 int timer [2][NUMBER_OF_TIMERS]; // the array to store the timers [0=START_TIME,1=ELAPSED TIME][TIMER NUMBER]
 int timer_showing; // the number of the timer currently showing on the screen
+int laps; // Lap counter
 
 AppTimer *display_reset_timer;
 
@@ -39,6 +40,7 @@ static TextLayer *top_text_layer;
 static TextLayer *bot_time_layer;
 static TextLayer *bot_button_layer;
 static TextLayer *bot_left_layer;
+static TextLayer *lap_layer;
 
 static void initialise_ui(void) {
   s_window = window_create();
@@ -73,7 +75,7 @@ static void initialise_ui(void) {
   layer_add_child(window_get_root_layer(s_window), (Layer *)bot_time_layer);
   
   // bot_button_layer
-  bot_button_layer = text_layer_create(GRect(70, 116, 71, 41));
+  bot_button_layer = text_layer_create(GRect(94, 116, 47, 41));
   text_layer_set_background_color(bot_button_layer, GColorClear);
   text_layer_set_text(bot_button_layer, ">");
   text_layer_set_text_alignment(bot_button_layer, GTextAlignmentRight);
@@ -81,11 +83,19 @@ static void initialise_ui(void) {
   layer_add_child(window_get_root_layer(s_window), (Layer *)bot_button_layer);
   
   // bot_left_layer
-  bot_left_layer = text_layer_create(GRect(2, 127, 69, 42));
+  bot_left_layer = text_layer_create(GRect(2, 127, 37, 42));
   text_layer_set_background_color(bot_left_layer, GColorClear);
-  text_layer_set_text(bot_left_layer, "OK");
+  text_layer_set_text(bot_left_layer, "0");
   text_layer_set_font(bot_left_layer, s_res_bitham_30_black);
   layer_add_child(window_get_root_layer(s_window), (Layer *)bot_left_layer);
+  
+  // lap_layer
+  lap_layer = text_layer_create(GRect(42, 127, 54, 42));
+  text_layer_set_background_color(lap_layer, GColorClear);
+  text_layer_set_text(lap_layer, "0");
+  text_layer_set_text_alignment(lap_layer, GTextAlignmentCenter);
+  text_layer_set_font(lap_layer, s_res_bitham_30_black);
+  layer_add_child(window_get_root_layer(s_window), (Layer *)lap_layer);
 }
 
 static void destroy_ui(void) {
@@ -95,6 +105,7 @@ static void destroy_ui(void) {
   text_layer_destroy(bot_time_layer);
   text_layer_destroy(bot_button_layer);
   text_layer_destroy(bot_left_layer);
+  text_layer_destroy(lap_layer);
 }
 // END AUTO-GENERATED UI CODE
 
@@ -133,6 +144,8 @@ static int get_current_running_timer(void)  {
     timer[ELAPSED_TIME][i] = 0;
   }
   set_timer_showing(0);
+   laps = 0;
+   update_lap_display();
  }
    
 
@@ -199,6 +212,8 @@ static void next_timer(void) {
   time_t current_time;
   
   current_time = time(NULL);
+  laps = 0;
+  update_lap_display();
   
   //check for a paused flag, and clear it if it exists;
   if (is_paused()) pause_resume();
@@ -360,6 +375,7 @@ void show_current_timer(void *data) {
    app_timer_cancel(display_reset_timer);
    
   timer_showing++;
+   laps = 0;
   if (timer_showing > NUMBER_OF_TIMERS-1) timer_showing = 0;
   set_timer_description(timer_showing);
   show_time(timer[ELAPSED_TIME][timer_showing]);
@@ -411,6 +427,15 @@ app_timer_register(1000, update_bot_left_display, NULL);
 
   }
 
+ void update_lap_display(void) {
+  
+  static char lap_text[4];
+  
+  snprintf(lap_text,sizeof(lap_text),"%d", laps );
+  text_layer_set_text(lap_layer, lap_text);
+  
+}
+
 static void load_timers_from_storage(void) {
   
   int data_version = 0;
@@ -455,7 +480,20 @@ void hide_app_window(void) {
 }
 
 static void select_click_handler(ClickRecognizerRef recognizer, void *context) {
+ 
+  if (!is_paused()) {
+   laps++;
+   update_lap_display();
+ } 
+}
+
+static void long_down_click_handler(ClickRecognizerRef recognizer, void *context) {
   pause_resume();
+}
+
+static void long_down_up_click_handler(ClickRecognizerRef recognizer, void *context) {
+  
+  
 }
 
 static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -491,6 +529,12 @@ static void click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
   window_long_click_subscribe(BUTTON_ID_SELECT, 3000, long_select_down_click_handler, long_select_up_click_handler);
+  window_long_click_subscribe(BUTTON_ID_DOWN, 1000, long_down_click_handler, long_down_up_click_handler);
+}
+
+static void accel_tap_handler(AccelAxisType axis, int32_t direction) {
+ 
+
 }
 
 static void init(void) {
@@ -498,6 +542,7 @@ static void init(void) {
   
   show_app_window();
   window_set_click_config_provider(s_window, click_config_provider);
+  accel_tap_service_subscribe(accel_tap_handler);
   load_timers_from_storage();
   set_timer_description(timer_showing);
   show_time(timer[ELAPSED_TIME][timer_showing]);
@@ -507,6 +552,7 @@ static void init(void) {
 
 static void deinit(void) {
   push_timers_to_storage();
+  accel_tap_service_unsubscribe();
   hide_app_window();
 }
 

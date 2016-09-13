@@ -4,9 +4,6 @@
     "keywords": [],
     "name": "tri-timer",
     "pebble": {
-        "capabilities": [
-            ""
-        ],
         "displayName": "Tri timer",
         "enableMultiJS": true,
         "messageKeys": [],

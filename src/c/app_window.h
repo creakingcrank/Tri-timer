@@ -5,3 +5,4 @@ void show_next_timer(void);
 void increment_timers(void *data);
 void set_timer_description(int timer_number);
 void pause_resume(void);
+void update_lap_display(void);
